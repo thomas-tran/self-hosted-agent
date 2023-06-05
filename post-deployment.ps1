@@ -28,7 +28,7 @@ param (
     [string]$ado_organization,
 
     [Parameter(Mandatory = $false)]
-    [string]$ado_token,
+    [string]$ado_token
 
 )
 
