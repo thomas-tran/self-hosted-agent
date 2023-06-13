@@ -7,7 +7,7 @@ param (
 )
 
 
-function setupazdevops {
+function setupazdevops{
     param(
         [string]$URL,
         [string]$PAT,
@@ -19,12 +19,13 @@ function setupazdevops {
     Start-Transcript
     Write-Host "start"
     
-    $azagentdir = "c:\agent"
+    $azagentdir="c:\agent"
     
     #test if an old installation exists, if so, delete the folder
-    if (test-path $azagentdir) {
+    if (test-path $azagentdir)
+    {
         set-location $azagentdir
-        $servicename = (Get-Content .service)
+        $servicename=(Get-Content .service)
         Stop-Service $servicename -ErrorAction SilentlyContinue
         set-location 'c:\'
         Remove-Item -Path $azagentdir -Force -Confirm:$false -Recurse
@@ -76,54 +77,55 @@ function setupghrunner {
     Start-Transcript
 
     Write-Host "About to setup GitHub Runner"
-    $ghrunnerdirectory = "c:\actions-runner"
+    $ghrunnerdirectory="c:\actions-runner"
 
 
-    #test if an old installation exists, if so, delete the folder
-    if (test-path $ghrunnerdirectory) {
-        set-location $ghrunnerdirectory
-        $servicename = (Get-Content .service)
-        Stop-Service $servicename -ErrorAction SilentlyContinue
-        set-location 'c:\'
-        Remove-Item -Path $ghrunnerdirectory -Force -Confirm:$false -Recurse
-    }
-
-    #create a new folder
-    new-item -ItemType Directory -Force -Path $ghrunnerdirectory
+#test if an old installation exists, if so, delete the folder
+if (test-path $ghrunnerdirectory)
+{
     set-location $ghrunnerdirectory
-    $global:ProgressPreference = 'SilentlyContinue'
-    $env:VSTS_AGENT_HTTPTRACE = $true
+    $servicename=(Get-Content .service)
+    Stop-Service $servicename -ErrorAction SilentlyContinue
+    set-location 'c:\'
+    Remove-Item -Path $ghrunnerdirectory -Force -Confirm:$false -Recurse
+}
 
-    #github requires tls 1.2
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#create a new folder
+new-item -ItemType Directory -Force -Path $ghrunnerdirectory
+set-location $ghrunnerdirectory
+$global:ProgressPreference = 'SilentlyContinue'
+$env:VSTS_AGENT_HTTPTRACE = $true
 
-    $ProgressPreference = 'SilentlyContinue'
-    #get the latest build agent version
-    $wr = Invoke-WebRequest https://api.github.com/repos/actions/runner/releases/latest -UseBasicParsing
-    $tag = ($wr | ConvertFrom-Json)[0].tag_name
-    $tag = $tag.Substring(1)
+#github requires tls 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    write-host "$tag is the latest version"
-    #build the url
+$ProgressPreference = 'SilentlyContinue'
+#get the latest build agent version
+$wr = Invoke-WebRequest https://api.github.com/repos/actions/runner/releases/latest -UseBasicParsing
+$tag = ($wr | ConvertFrom-Json)[0].tag_name
+$tag = $tag.Substring(1)
 
-    $download = "https://github.com/actions/runner/releases/download/v$tag/actions-runner-win-x64-$tag.zip"
+write-host "$tag is the latest version"
+#build the url
 
-    #download the agent
-    Invoke-WebRequest $download -Out ghactionsrunner.zip
+$download = "https://github.com/actions/runner/releases/download/v$tag/actions-runner-win-x64-$tag.zip"
 
-    #expand the zip
-    Expand-Archive -Path ghactionsrunner.zip -DestinationPath $PWD
+#download the agent
+Invoke-WebRequest $download -Out ghactionsrunner.zip
 
-
-    #run the config script of the build agent
-    set-location $ghrunnerdirectory
-    .\config.cmd --unattended --url $URL  --token "$PAT"  --runnergroup $POOL  --replace --runasservice --replace
+#expand the zip
+Expand-Archive -Path ghactionsrunner.zip -DestinationPath $PWD
 
 
+#run the config script of the build agent
+set-location $ghrunnerdirectory
+.\config.cmd --unattended --url $URL  --token "$PAT"  --runnergroup $POOL  --replace --runasservice --replace
 
-    #exit
-    Stop-Transcript
-    exit 0
+
+
+#exit
+Stop-Transcript
+exit 0
 
 }
 
@@ -135,10 +137,12 @@ Write-Output $POOL
 Write-Output $AGENT
 Write-Output $AGENTTYPE
 
-if ($AGENTTYPE.ToLower() -eq "azuredevops") {
+if ($AGENTTYPE.ToLower() -eq "azuredevops")
+{
     setupazdevops -URL $URL -PAT $PAT -POOL $POOL -AGENT $AGENT
 }
 
-else {
+else
+ {
     setupghrunner -URL $URL -PAT $PAT -POOL $POOL -AGENT $AGENT
 }
